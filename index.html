@@ -227,6 +227,174 @@
 
         .win { background: rgba(76, 175, 80, 0.3); }
         .lose { background: rgba(244, 67, 54, 0.3); }
+
+        /* Modal Tutorial */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 20px;
+            width: 80%;
+            max-width: 600px;
+            position: relative;
+            animation: modalSlideIn 0.5s ease-out;
+            color: white;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        @keyframes modalSlideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .close {
+            color: white;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close:hover {
+            color: #ff6b6b;
+            transform: scale(1.1);
+        }
+
+        .modal h2 {
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 2em;
+        }
+
+        .modal p {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .modal ul {
+            margin: 15px 0;
+            padding-left: 20px;
+        }
+
+        .modal li {
+            margin-bottom: 8px;
+        }
+
+        /* Action Log */
+        .action-log {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            max-height: 150px;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+        }
+
+        .action-log h3 {
+            margin-bottom: 10px;
+            text-align: center;
+            color: #fdcb6e;
+        }
+
+        .log-entry {
+            background: rgba(255,255,255,0.1);
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 5px;
+            font-size: 0.9em;
+            animation: logEntryFadeIn 0.5s ease-out;
+            border-left: 3px solid #4CAF50;
+        }
+
+        .log-entry.opponent {
+            border-left-color: #f44336;
+        }
+
+        @keyframes logEntryFadeIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* Animazioni migliorate */
+        .card-played {
+            animation: cardPlayed 0.8s ease-out;
+        }
+
+        @keyframes cardPlayed {
+            0% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.2) rotate(5deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
+        .damage-animation {
+            animation: damageShake 0.6s ease-out;
+        }
+
+        @keyframes damageShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .energy-gain {
+            animation: energyPulse 0.8s ease-out;
+        }
+
+        @keyframes energyPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); color: #4CAF50; }
+            100% { transform: scale(1); }
+        }
+
+        .floating-damage {
+            position: absolute;
+            color: #ff6b6b;
+            font-weight: bold;
+            font-size: 1.5em;
+            pointer-events: none;
+            animation: floatingDamage 2s ease-out forwards;
+            z-index: 100;
+        }
+
+        @keyframes floatingDamage {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-50px); opacity: 0; }
+        }
+
+        .help-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #fdcb6e, #e17055);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 1.5em;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+
+        .help-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        }
     </style>
 </head>
 <body>
@@ -265,6 +433,11 @@
             <div class="hand-cards" id="playerHand"></div>
         </div>
 
+        <div class="action-log">
+            <h3>📜 Log delle Azioni</h3>
+            <div id="actionLog"></div>
+        </div>
+
         <div class="controls">
             <button class="btn" id="endTurnBtn">Termina Turno</button>
             <button class="btn" id="attackBtn" disabled>Attacca!</button>
@@ -273,6 +446,44 @@
 
         <div id="message" class="message" style="display: none;"></div>
     </div>
+
+    <!-- Modal Tutorial -->
+    <div id="tutorialModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>⚔️ Come Giocare a Elemental Clash</h2>
+            
+            <p><strong>🎯 Obiettivo:</strong> Riduci i punti vita dell'avversario a 0 utilizzando le tue carte elementali!</p>
+            
+            <h3>🃏 Le Carte</h3>
+            <ul>
+                <li><strong>Costo:</strong> Energia necessaria per giocare la carta (numero in alto a destra)</li>
+                <li><strong>Potere:</strong> Danno che infligge (numero grande al centro)</li>
+                <li><strong>Elementi:</strong> Fuoco 🔥, Acqua 💧, Terra 🌍, Aria 💨</li>
+            </ul>
+            
+            <h3>⚡ Come Funziona</h3>
+            <ul>
+                <li><strong>Inizio:</strong> Parti con 20 vita, 3 energia e 3 carte</li>
+                <li><strong>Ogni turno:</strong> +1 energia, pesca 1 carta</li>
+                <li><strong>Giocare:</strong> Clicca su una carta per giocarla (se hai abbastanza energia)</li>
+                <li><strong>Attaccare:</strong> Le tue carte attaccano automaticamente, ma l'avversario può difendersi</li>
+                <li><strong>Difesa:</strong> Le carte in campo riducono i danni ricevuti</li>
+            </ul>
+            
+            <h3>🎮 Controlli</h3>
+            <ul>
+                <li><strong>Clicca su una carta</strong> nella tua mano per giocarla</li>
+                <li><strong>"Attacca!"</strong> per infliggere danni all'avversario</li>
+                <li><strong>"Termina Turno"</strong> per passare all'avversario</li>
+            </ul>
+            
+            <p><strong>💡 Strategia:</strong> Gestisci bene la tua energia e crea combo potenti!</p>
+        </div>
+    </div>
+
+    <!-- Pulsante Aiuto -->
+    <button class="help-btn" id="helpBtn">?</button>
 
     <script>
         // Definizione delle carte
@@ -304,6 +515,9 @@
             turn: 'player',
             gameOver: false
         };
+
+        let actionLog = [];
+        let maxLogEntries = 8;
 
         // Funzioni di utilità
         function shuffleArray(array) {
@@ -341,8 +555,86 @@
                 turn: 'player',
                 gameOver: false
             };
+            actionLog = [];
             updateUI();
-            showMessage("Nuovo gioco iniziato! È il tuo turno.");
+            addToLog("🎮 Nuovo gioco iniziato! È il tuo turno.", 'system');
+        }
+
+        // Sistema di Log
+        function addToLog(message, type = 'player') {
+            const timestamp = new Date().toLocaleTimeString('it-IT', { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            });
+            
+            actionLog.unshift({
+                message: message,
+                type: type,
+                timestamp: timestamp
+            });
+
+            // Mantieni solo le ultime entries
+            if (actionLog.length > maxLogEntries) {
+                actionLog = actionLog.slice(0, maxLogEntries);
+            }
+
+            updateLogUI();
+        }
+
+        function updateLogUI() {
+            const logContainer = document.getElementById('actionLog');
+            logContainer.innerHTML = actionLog.map(entry => 
+                `<div class="log-entry ${entry.type}">
+                    <small>${entry.timestamp}</small> - ${entry.message}
+                </div>`
+            ).join('');
+        }
+
+        // Animazioni
+        function animateCard(cardElement, animationClass) {
+            cardElement.classList.add(animationClass);
+            setTimeout(() => {
+                cardElement.classList.remove(animationClass);
+            }, 800);
+        }
+
+        function showFloatingDamage(damage, target) {
+            const floatingEl = document.createElement('div');
+            floatingEl.className = 'floating-damage';
+            floatingEl.textContent = `-${damage}`;
+            
+            const targetEl = document.querySelector(target);
+            if (targetEl) {
+                const rect = targetEl.getBoundingClientRect();
+                floatingEl.style.left = `${rect.left + rect.width/2}px`;
+                floatingEl.style.top = `${rect.top}px`;
+                floatingEl.style.position = 'fixed';
+                
+                document.body.appendChild(floatingEl);
+                
+                setTimeout(() => {
+                    document.body.removeChild(floatingEl);
+                }, 2000);
+            }
+        }
+
+        function animateEnergyGain(isPlayer = true) {
+            const energyEl = document.getElementById(isPlayer ? 'playerEnergy' : 'opponentEnergy');
+            energyEl.classList.add('energy-gain');
+            setTimeout(() => {
+                energyEl.classList.remove('energy-gain');
+            }, 800);
+        }
+
+        function animateDamage(isPlayer = true) {
+            const targetEl = document.querySelector(isPlayer ? '.player-info' : '.opponent-field');
+            if (targetEl) {
+                targetEl.classList.add('damage-animation');
+                setTimeout(() => {
+                    targetEl.classList.remove('damage-animation');
+                }, 600);
+            }
         }
 
         // Rendering delle carte
@@ -410,29 +702,44 @@
                 return;
             }
 
+            // Anima la carta giocata
+            const cardElement = document.querySelector(`[data-card-id="${cardId}"]`);
+            if (cardElement) {
+                animateCard(cardElement, 'card-played');
+            }
+
             // Gioca la carta
             gameState.playerEnergy -= card.cost;
             gameState.playerField.push(card);
             gameState.playerHand.splice(cardIndex, 1);
 
-            showMessage(`Hai giocato ${card.name}!`);
+            addToLog(`🃏 Hai giocato ${card.name} (${card.power} ⚡)`, 'player');
             updateUI();
         }
 
-        // Attacco
+        // Attacco migliorato
         function attack() {
             if (gameState.playerField.length === 0 || gameState.turn !== 'player') return;
 
             let totalDamage = gameState.playerField.reduce((sum, card) => sum + card.power, 0);
+            let actualDamage = totalDamage;
             
             // Se l'avversario ha carte in campo, riduci il danno
             if (gameState.opponentField.length > 0) {
                 const opponentDefense = gameState.opponentField.reduce((sum, card) => sum + card.power, 0);
-                totalDamage = Math.max(0, totalDamage - opponentDefense);
+                actualDamage = Math.max(0, totalDamage - opponentDefense);
+                addToLog(`⚔️ Attacco! ${totalDamage} danni → ${actualDamage} (difesa: ${opponentDefense})`, 'player');
+            } else {
+                addToLog(`⚔️ Attacco diretto! ${actualDamage} danni inflitti`, 'player');
             }
 
-            gameState.opponentHealth -= totalDamage;
-            showMessage(`Hai inflitto ${totalDamage} danni!`);
+            gameState.opponentHealth -= actualDamage;
+            
+            // Animazioni
+            if (actualDamage > 0) {
+                animateDamage(false);
+                showFloatingDamage(actualDamage, '.opponent-field');
+            }
 
             if (gameState.opponentHealth <= 0) {
                 endGame('win');
@@ -442,49 +749,81 @@
             updateUI();
         }
 
-        // Turno dell'avversario (IA semplice)
+        // IA Migliorata
         function opponentTurn() {
             gameState.turn = 'opponent';
-            showMessage("Turno dell'avversario...");
+            addToLog("🤖 Turno dell'avversario...", 'opponent');
 
             setTimeout(() => {
                 // L'avversario pesca una carta
-                gameState.opponentHand.push(...drawCards(1, false));
+                const newCard = drawCards(1, false)[0];
+                gameState.opponentHand.push(newCard);
                 gameState.opponentEnergy++;
+                animateEnergyGain(false);
+                addToLog(`🃏 L'avversario pesca una carta (+1 energia)`, 'opponent');
 
-                // L'avversario gioca carte casuali se può
-                const playableCards = gameState.opponentHand.filter(card => card.cost <= gameState.opponentEnergy);
-                if (playableCards.length > 0 && Math.random() > 0.3) {
-                    const cardToPlay = playableCards[Math.floor(Math.random() * playableCards.length)];
-                    gameState.opponentEnergy -= cardToPlay.cost;
-                    gameState.opponentField.push(cardToPlay);
-                    gameState.opponentHand = gameState.opponentHand.filter(card => card.id !== cardToPlay.id);
-                    showMessage(`L'avversario ha giocato ${cardToPlay.name}!`);
-                }
-
-                // L'avversario attacca se ha carte
-                if (gameState.opponentField.length > 0) {
-                    let damage = gameState.opponentField.reduce((sum, card) => sum + card.power, 0);
-                    if (gameState.playerField.length > 0) {
-                        const playerDefense = gameState.playerField.reduce((sum, card) => sum + card.power, 0);
-                        damage = Math.max(0, damage - playerDefense);
+                setTimeout(() => {
+                    // IA più intelligente
+                    const playableCards = gameState.opponentHand.filter(card => card.cost <= gameState.opponentEnergy);
+                    
+                    // Strategia: gioca la carta più costosa possibile
+                    if (playableCards.length > 0) {
+                        playableCards.sort((a, b) => b.power - a.power); // Ordina per potere
+                        
+                        // Probabilità di giocare basata sulla situazione
+                        const shouldPlay = gameState.opponentHealth < 10 ? 0.9 : // Disperato
+                                         gameState.playerField.length > gameState.opponentField.length ? 0.8 : // In svantaggio
+                                         0.6; // Normale
+                        
+                        if (Math.random() < shouldPlay) {
+                            const cardToPlay = playableCards[0];
+                            gameState.opponentEnergy -= cardToPlay.cost;
+                            gameState.opponentField.push(cardToPlay);
+                            gameState.opponentHand = gameState.opponentHand.filter(card => card.id !== cardToPlay.id);
+                            addToLog(`🃏 L'avversario gioca ${cardToPlay.name} (${cardToPlay.power} ⚡)`, 'opponent');
+                        }
                     }
-                    gameState.playerHealth -= damage;
-                    showMessage(`L'avversario ti ha inflitto ${damage} danni!`);
 
-                    if (gameState.playerHealth <= 0) {
-                        endGame('lose');
-                        return;
-                    }
-                }
+                    setTimeout(() => {
+                        // L'avversario attacca se conveniente
+                        if (gameState.opponentField.length > 0) {
+                            let totalDamage = gameState.opponentField.reduce((sum, card) => sum + card.power, 0);
+                            let actualDamage = totalDamage;
+                            
+                            if (gameState.playerField.length > 0) {
+                                const playerDefense = gameState.playerField.reduce((sum, card) => sum + card.power, 0);
+                                actualDamage = Math.max(0, totalDamage - playerDefense);
+                                addToLog(`⚔️ L'avversario attacca! ${totalDamage} danni → ${actualDamage} (tua difesa: ${playerDefense})`, 'opponent');
+                            } else {
+                                addToLog(`⚔️ L'avversario attacca direttamente! ${actualDamage} danni`, 'opponent');
+                            }
+                            
+                            gameState.playerHealth -= actualDamage;
+                            
+                            if (actualDamage > 0) {
+                                animateDamage(true);
+                                showFloatingDamage(actualDamage, '.player-info');
+                            }
 
-                // Torna al turno del giocatore
-                gameState.turn = 'player';
-                gameState.playerEnergy++;
-                gameState.playerHand.push(...drawCards(1, true));
-                showMessage("È di nuovo il tuo turno!");
-                updateUI();
-            }, 2000);
+                            if (gameState.playerHealth <= 0) {
+                                endGame('lose');
+                                return;
+                            }
+                        }
+
+                        setTimeout(() => {
+                            // Torna al turno del giocatore
+                            gameState.turn = 'player';
+                            gameState.playerEnergy++;
+                            const playerNewCard = drawCards(1, true)[0];
+                            gameState.playerHand.push(playerNewCard);
+                            animateEnergyGain(true);
+                            addToLog("🎮 È di nuovo il tuo turno! (+1 energia)", 'system');
+                            updateUI();
+                        }, 1000);
+                    }, 1500);
+                }, 1000);
+            }, 1000);
         }
 
         // Termina turno
@@ -523,6 +862,32 @@
         document.getElementById('endTurnBtn').addEventListener('click', endTurn);
         document.getElementById('attackBtn').addEventListener('click', attack);
         document.getElementById('newGameBtn').addEventListener('click', initGame);
+
+        // Modal Tutorial
+        const modal = document.getElementById('tutorialModal');
+        const helpBtn = document.getElementById('helpBtn');
+        const closeBtn = document.querySelector('.close');
+
+        helpBtn.addEventListener('click', () => {
+            modal.style.display = 'block';
+        });
+
+        closeBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        // Mostra tutorial all'inizio
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                modal.style.display = 'block';
+            }, 1000);
+        });
 
         // Inizializza il gioco
         initGame();
